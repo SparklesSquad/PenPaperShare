@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const emailDescription = (otp, username) => `<!DOCTYPE html>
 <html lang="en">
@@ -133,43 +136,6 @@ export const sendOtpController = async (req, res) => {
   }
 };
 
-//Register API
-// export const registerController = async (req, res) => {
-//   try {
-//     const { username, email, password, mobile } = req.body;
-
-//     //To generate unique userid
-//     const maxUser = await User.findOne({}, {}, { sort: { userid: -1 } });
-//     let newUserId = 1;
-//     if (maxUser) {
-//       newUserId = maxUser.userid + 1;
-//     }
-
-//     //Password encryption
-//     let encryptPwd = password;
-//     bcrypt.hash(password, 10, async function (err, hash) {
-//       if (err) {
-//         console.error(err);
-//         return res.status(400).send('Error while encrypting the password!');
-//       }
-//       encryptPwd = hash;
-
-//       let newUser = new User({
-//         userid: newUserId,
-//         username: username,
-//         email: email,
-//         password: encryptPwd,
-//         mobile: mobile,
-//       });
-//       await newUser.save();
-//       return res.status(200).send('Registered Successfully');
-//     });
-//   } catch (err) {
-//     console.log(err);
-//     return res.status(500).send('Server Error!!');
-//   }
-// };
-
 export const registerController = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -192,15 +158,7 @@ export const registerController = async (req, res) => {
     const { username, password, mobile } = req.body;
     const hash = await bcrypt.hash(password, 10);
 
-    //   To generate unique userid
-    const maxUser = await User.findOne({}, {}, { sort: { userid: -1 } });
-    let newUserId = 1;
-    if (maxUser) {
-      newUserId = maxUser.userid + 1;
-    }
-
     const newUser = new User({
-      userid: newUserId,
       username,
       email,
       password: hash,
@@ -237,13 +195,11 @@ export const loginController = async (req, res) => {
     const decryptPwd = bcrypt.compareSync(password, user.password);
     if (decryptPwd) {
       let payload = {
-        user: {
-          id: user.id,
-        },
+        id: user._id
       };
 
       //Sents token when user logged in
-      jwt.sign(payload, 'jwtPassword', { expiresIn: 3600000 }, (err, token) => {
+      jwt.sign(payload, process.env.JWT_SECRET_CODE, { expiresIn: 3600000 }, (err, token) => {
         if (err) throw err;
         return res.json({ token, message: 'Logged in Successfully' });
       });
@@ -258,10 +214,8 @@ export const loginController = async (req, res) => {
 
 export const forgotPasswordController = async (req, res) => {
   try {
-    const { password } = req.body;
-    const { id } = req.params;
-    console.log('Forgot Password API called');
-    const user = await User.findOne({ id });
+    const { password , user_id} = req.body;
+    const user = await User.findOne({ user_id });
     if (!user) {
       return res.status(404).send('User not found');
     }
@@ -270,9 +224,9 @@ export const forgotPasswordController = async (req, res) => {
 
     user.password = hash;
     await user.save();
-    res.status(200).send('Password updated successfully');
+    return res.status(200).send('Password updated successfully');
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server error while updating password');
+    return res.status(500).send('Server error while updating password');
   }
 };

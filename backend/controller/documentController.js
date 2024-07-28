@@ -7,34 +7,41 @@ import downloadFile from '../utils/download-file.js';
 
 //To upload the document
 export const uploadDocumentController = async (req, res) => {
-  const { file } = req;
-  const { userId } = req.body;
+  const { file} = req;
+  const { title, description, subject, institute} = req.body;
 
-  if (!file || !userId) {
-    return res.status(400).json({ message: 'File and userId are required' });
+  const documentData = { file, title, description, subject, institute};
+  
+  const user_id = req.user.user.id;
+
+  if (!file || !user_id) {
+    return res.status(400).json({ message: 'File and user_id are required' });
   }
 
   try {
     // Ensure user exists
-    const user = await User.findById(userId);
+    const user = await User.findById(user_id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Upload file to S3 and save metadata
-    const fileMetadata = await uploadFile(file, userId, res);
-    res.status(200).json('Document Uploaded Successfully');
+    const fileMetadata = await uploadFile(documentData, user_id, res);
+    if (fileMetadata === "File size cannot be greater then 50MB!"){
+      return res.status(500).send("File size cannot be greater then 50MB!")
+    }
+    return res.status(200).json('Document Uploaded Successfully');
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Error uploading file', error });
+    return res.status(500).json({ message: 'Error uploading file', error });
   }
 };
 
 //To view or fetch the document
 export const viewDocumentController = async (req, res) => {
   try {
-    const {docId} = req.body;
-    const document = await Document.findById(docId);
+    const {document_id} = req.body;
+    const document = await Document.findById(document_id);
     if(!document){
       return res.status(404).json({ message: 'Document not Found' });
     }
@@ -48,13 +55,13 @@ export const viewDocumentController = async (req, res) => {
 //To doenload the Document
 export const downloadDocumentController = async (req, res) => {
   try {
-    const {docId, download_user_id} = req.body;
-    const document = await Document.findById(docId);
+    const {document_id} = req.body;
+    const document = await Document.findById(document_id);
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
     
-    await downloadFile(document, download_user_id, document.user_id);
+    await downloadFile(document, req.user.user.id, document.user_id);
     res.status(200).json('Document downloaded Successfully');
   } catch (error) {
     console.log(error);

@@ -4,6 +4,7 @@ import {
   loginController,
   forgotPasswordController,
 } from '../controller/authController.js';
+import isLoggedIn from '../middleware/isLoggedIn.js';
 import { Router } from 'express';
 
 const router = Router();

@@ -7,13 +7,11 @@ dotenv.config();
 
 const downloadFile = async (document, download_user_id, upload_user_id) => {
   
-    console.log(document);
   const params = {
     Bucket: process.env.BUCKET_NAME,
     Key: document.key
   };
 
-  console.log(document.key);
   const downloadPath = `./${document.filename}`;
 
   try {
