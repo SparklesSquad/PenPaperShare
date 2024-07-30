@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -195,14 +195,19 @@ export const loginController = async (req, res) => {
     const decryptPwd = bcrypt.compareSync(password, user.password);
     if (decryptPwd) {
       let payload = {
-        id: user._id
+        id: user._id,
       };
-
+      console.log(process.env.JWT_SECRET_CODE);
       //Sents token when user logged in
-      jwt.sign(payload, process.env.JWT_SECRET_CODE, { expiresIn: 3600000 }, (err, token) => {
-        if (err) throw err;
-        return res.json({ token, message: 'Logged in Successfully' });
-      });
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET_CODE,
+        { expiresIn: 3600000 },
+        (err, token) => {
+          if (err) throw err;
+          return res.json({ token, message: 'Logged in Successfully' });
+        }
+      );
     } else {
       return res.status(404).send('Invalid Credentials !!');
     }
@@ -214,7 +219,7 @@ export const loginController = async (req, res) => {
 
 export const forgotPasswordController = async (req, res) => {
   try {
-    const { password , user_id} = req.body;
+    const { password, user_id } = req.body;
     const user = await User.findOne({ user_id });
     if (!user) {
       return res.status(404).send('User not found');

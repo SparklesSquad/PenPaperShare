@@ -4,15 +4,14 @@ import uploadFile from './../utils/upload-file.js';
 import Document from './../schemas/document.js';
 import downloadFile from '../utils/download-file.js';
 
-
 //To upload the document
 export const uploadDocumentController = async (req, res) => {
-  const { file} = req;
-  const { title, description, subject, institute} = req.body;
+  const { file } = req;
+  const { title, description, subject, institute } = req.body;
 
-  const documentData = { file, title, description, subject, institute};
-  
-  const user_id = req.user.user.id;
+  const documentData = { file, title, description, subject, institute };
+
+  const user_id = req.user.id;
 
   if (!file || !user_id) {
     return res.status(400).json({ message: 'File and user_id are required' });
@@ -27,8 +26,8 @@ export const uploadDocumentController = async (req, res) => {
 
     // Upload file to S3 and save metadata
     const fileMetadata = await uploadFile(documentData, user_id, res);
-    if (fileMetadata === "File size cannot be greater then 50MB!"){
-      return res.status(500).send("File size cannot be greater then 50MB!")
+    if (fileMetadata === 'File size cannot be greater then 50MB!') {
+      return res.status(500).send('File size cannot be greater then 50MB!');
     }
     return res.status(200).json('Document Uploaded Successfully');
   } catch (error) {
@@ -40,31 +39,35 @@ export const uploadDocumentController = async (req, res) => {
 //To view or fetch the document
 export const viewDocumentController = async (req, res) => {
   try {
-    const {document_id} = req.body;
+    const { document_id } = req.body;
     const document = await Document.findById(document_id);
-    if(!document){
+    if (!document) {
       return res.status(404).json({ message: 'Document not Found' });
     }
-    return res.status(200).json({document, message : "Document fetched Successfully"});
+    return res
+      .status(200)
+      .json({ document, message: 'Document fetched Successfully' });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: "Error while fetching Document", error });
+    res.status(404).json({ message: 'Error while fetching Document', error });
   }
 };
 
 //To doenload the Document
 export const downloadDocumentController = async (req, res) => {
   try {
-    const {document_id} = req.body;
+    const { document_id } = req.body;
     const document = await Document.findById(document_id);
     if (!document) {
       return res.status(404).json({ message: 'Document not found' });
     }
-    
-    await downloadFile(document, req.user.user.id, document.user_id);
+
+    await downloadFile(document, req.user.id, document.user_id);
     res.status(200).json('Document downloaded Successfully');
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: "Error while Downloading Document", error });
+    res
+      .status(404)
+      .json({ message: 'Error while Downloading Document', error });
   }
 };
