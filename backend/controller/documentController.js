@@ -4,6 +4,23 @@ import uploadFile from './../utils/upload-file.js';
 import Document from './../schemas/document.js';
 import downloadFile from '../utils/download-file.js';
 
+export const getAllDocumentsController = async (req, res) => {
+  try {
+    const documents = await Document.find({ approved: true });
+    return res.status(200).json({
+      data: documents,
+      message: 'Fetched all documents successfully !!',
+      count: documents.length,
+    });
+  } catch (error) {
+    console.log('Error while fetching documents in the server !!');
+    console.log(error);
+    return res
+      .status(500)
+      .send('Error while fetching documents in the server !!');
+  }
+};
+
 //To upload the document
 export const uploadDocumentController = async (req, res) => {
   const { file } = req;

@@ -6,6 +6,7 @@ import User from './schemas/user.js';
 import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import ratingRoutes from './routes/ratingRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -38,7 +39,8 @@ mongoose
 
 app.use('/auth', authRoutes);
 app.use('/document', documentRoutes);
-app.use('/rating', ratingRoutes)
+app.use('/rating', ratingRoutes);
+app.use('/admin', adminRoutes);
 
 // API
 app.get('/', async (req, res) => {

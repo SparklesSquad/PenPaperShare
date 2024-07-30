@@ -2,7 +2,8 @@ import express from 'express';
 import {
   uploadDocumentController,
   downloadDocumentController,
-  viewDocumentController
+  viewDocumentController,
+  getAllDocumentsController,
 } from '../controller/documentController.js';
 import multer from 'multer';
 import isLoggedIn from '../middleware/isLoggedIn.js';
@@ -16,12 +17,13 @@ const upload = multer({ storage });
 const router = express.Router();
 
 router.post(
-  '/upload-document', isLoggedIn,
-  upload.single('file'), 
+  '/upload-document',
+  isLoggedIn,
+  upload.single('file'),
   uploadDocumentController
 );
+router.get('/get-all-documents', getAllDocumentsController);
 router.get('/download-document', isLoggedIn, downloadDocumentController);
 router.get('/view-document', viewDocumentController);
-
 
 export default router;
