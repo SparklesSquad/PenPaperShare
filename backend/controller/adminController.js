@@ -1,7 +1,11 @@
 import Document from '../schemas/document.js';
 import User from '../schemas/user.js';
+import Upload from '../schemas/upload.js';
+import Rating from '../schemas/rating.js';
+import Download from '../schemas/download.js';
 import deleteFile from '../utils/delete-file.js';
 
+//To get all the documents
 export const getAllDocumentsController = async (req, res) => {
   try {
     const documents = await Document.find({ approved: true });
@@ -16,46 +20,6 @@ export const getAllDocumentsController = async (req, res) => {
     return res
       .status(500)
       .send('Error while fetching documents in the server !!');
-  }
-};
-
-export const deleteDocumentController = async (req, res) => {
-  try {
-    const { document_id } = req.body;
-
-    // Deletes the document in MongoDB
-    const document = await Document.findByIdAndDelete(document_id);
-
-    // Deletes the document in AWS
-    const awsResponse = await deleteFile(document);
-
-    console.log(awsResponse);
-
-    res.status(200).json({
-      message: 'Document Deleted Successfully!!',
-    });
-  } catch (error) {
-    console.log('Error while deleting document in the server !!');
-    console.log(error);
-    return res
-      .status(500)
-      .send('Error while deleting document in the server !!');
-  }
-};
-
-export const pendingApprovalDocumentsController = async (req, res) => {
-  try {
-    const documents = await Document.find({ approved: false });
-    return res.status(200).json({
-      data: documents,
-      message: 'Fetched all Pending Approval documents successfully !!',
-      count: documents.length,
-    });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .send('Error while fetching Pending Approval documents in the server !!');
   }
 };
 
@@ -76,6 +40,61 @@ export const viewDocumentController = async (req, res) => {
   }
 };
 
+//To delete the document in entire database
+export const deleteDocumentController = async (req, res) => {
+  try {
+    const { document_id } = req.body;
+
+    // Deletes the document in MongoDB - Document Schema
+    const document = await Document.findByIdAndDelete(document_id);
+
+    // Deletes the document in MongoDB - Upload Schema
+    const upload = await Upload.deleteOne({document_id : document_id});
+
+    // Deletes the document in MongoDB - Download Schema
+    const download = await Download.deleteMany({document_id : document_id});
+
+    // Deletes the document in MongoDB - Rating Schema
+    const rating = await Rating.deleteMany({document_id : document_id});
+
+
+    // Deletes the document in AWS
+    const awsResponse = await deleteFile(document);
+
+    console.log(awsResponse);
+
+    res.status(200).json({
+      message: 'Document Deleted Successfully!!',
+    });
+  } catch (error) {
+    console.log('Error while deleting document in the server !!');
+    console.log(error);
+    return res
+      .status(500)
+      .send('Error while deleting document in the server !!');
+  }
+};
+
+
+//To get the documents pending for approval
+export const pendingApprovalDocumentsController = async (req, res) => {
+  try {
+    const documents = await Document.find({ approved: false });
+    return res.status(200).json({
+      data: documents,
+      message: 'Fetched all Pending Approval documents successfully !!',
+      count: documents.length,
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .send('Error while fetching Pending Approval documents in the server !!');
+  }
+};
+
+
+//To approve the document
 export const approveDocumentController = async (req, res) => {
   try {
     const { document_id } = req.body;
@@ -95,6 +114,7 @@ export const approveDocumentController = async (req, res) => {
   }
 };
 
+//To get all the users
 export const getAllUsersController = async (req, res) => {
   try {
     const users = await User.find();
@@ -110,6 +130,7 @@ export const getAllUsersController = async (req, res) => {
   }
 };
 
+
 export const viewUserController = async (req, res) => {
   try {
     const { user_id } = req.body;
@@ -123,3 +144,40 @@ export const viewUserController = async (req, res) => {
     res.status(404).json({ message: 'Error while fetching User', error });
   }
 };
+
+
+export const deleteUserController = async (req, res ) => {
+  try {
+    const {user_id} = req.body;
+    
+    //To delete all the document tree
+    const documents = await Document.find({user_id : user_id});
+
+    console.log(documents);
+    for (let i = 0; i < documents.length; i++){
+      //req.body.document_id = documents[i]._id;
+      const document_id = documents[i]._id;
+      //await deleteDocumentController(req, res);
+      const document = await Document.findByIdAndDelete(document_id);
+      const upload = await Upload.deleteOne({document_id : document_id});
+      const download = await Download.deleteMany({document_id : document_id});
+      const rating = await Rating.deleteMany({document_id : document_id});
+
+      // Deletes the document in AWS
+      const awsResponse = await deleteFile(document);
+    }
+
+    
+    
+    //To delete all the user download/uploads/ratings
+    const user = await User.findByIdAndDelete(user_id);
+    const upload = await Upload.deleteMany({upload_user_id : user_id});
+    const download = await Download.deleteMany({download_user_id : user_id});
+    const rating = await Rating.deleteMany({download_user_id : user_id});
+
+    return res.status(200).json({message : "User deleted successfully"})
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: 'Error while Deleting User', error });
+  }
+}

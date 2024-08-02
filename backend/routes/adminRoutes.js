@@ -7,6 +7,7 @@ import {
   getAllUsersController,
   viewDocumentController,
   viewUserController,
+  deleteUserController,
 } from '../controller/adminController.js';
 import isLoggedIn from '../middleware/isLoggedIn.js';
 import isAdmin from '../middleware/isAdmin.js';
@@ -43,4 +44,7 @@ router.get('/get-all-users', isLoggedIn, isAdmin, getAllUsersController);
 
 // TODO: BIt More complex
 router.get('/view-user', isLoggedIn, isAdmin, viewUserController);
+
+router.delete('/delete-user', isLoggedIn, isAdmin, deleteUserController);
+
 export default router;

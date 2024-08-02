@@ -32,6 +32,10 @@ export const documentRatingController = async (req, res) => {
     }
 
     const document = await Document.findById(document_id);
+
+    if (!document){
+      return res.status(200).send('No document found to rate');
+    }
     const rateDocument = new Rating({
       upload_user_id: document.user_id,
       download_user_id,

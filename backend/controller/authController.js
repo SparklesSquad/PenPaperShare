@@ -118,7 +118,7 @@ export const sendOtpController = async (req, res) => {
     const otp = crypto.randomInt(100000, 999999).toString(); // Generates a 6-digit OTP
 
     // Store OTP temporarily for the session
-    const otpExpires = Date.now() + 1 * 60 * 1000; // OTP expires in 15 minutes
+    const otpExpires = Date.now() + 5 * 60 * 1000; // OTP expires in 15 minutes
     req.session.otp = { otp, expires: otpExpires };
 
     // Send OTP email
