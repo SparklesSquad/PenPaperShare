@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import ratingRoutes from './routes/ratingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use('/auth', authRoutes);
 app.use('/document', documentRoutes);
 app.use('/rating', ratingRoutes);
 app.use('/admin', adminRoutes);
+app.use('/analytics', analyticsRoutes);
 
 // API
 app.get('/', async (req, res) => {

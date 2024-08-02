@@ -1,5 +1,3 @@
-import Document from './../schemas/document.js';
-import Upload from './../schemas/upload.js';
 import dotenv from 'dotenv';
 import s3 from './aws-config.js';
 

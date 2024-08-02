@@ -23,7 +23,6 @@ router.get(
 
 router.get('/view-document', isLoggedIn, isAdmin, viewDocumentController);
 
-// TODO: When deleting a document, all the things linked with the document should be deleted.
 router.delete(
   '/delete-document',
   isLoggedIn,
@@ -42,7 +41,7 @@ router.put('/approve-document', isLoggedIn, isAdmin, approveDocumentController);
 
 router.get('/get-all-users', isLoggedIn, isAdmin, getAllUsersController);
 
-// TODO: BIt More complex
+// TODO: Bit More complex
 router.get('/view-user', isLoggedIn, isAdmin, viewUserController);
 
 router.delete('/delete-user', isLoggedIn, isAdmin, deleteUserController);

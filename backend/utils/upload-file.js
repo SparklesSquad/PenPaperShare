@@ -5,14 +5,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const uploadFile = async (documentData, user_id, res) => {
-
+const uploadFile = async (documentData, user_id) => {
   const file = documentData.file;
   const { originalname, buffer } = file;
   const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
-  if(buffer.length > MAX_SIZE_BYTES){
-    return "File size cannot be greater then 50MB!";
+  if (buffer.length > MAX_SIZE_BYTES) {
+    return 'File size cannot be greater then 50MB!';
   }
   const params = {
     Bucket: process.env.BUCKET_NAME,
@@ -22,25 +21,25 @@ const uploadFile = async (documentData, user_id, res) => {
   };
 
   try {
-    const { Location, Key } = await s3.upload(params).promise();
+    const { Location } = await s3.upload(params).promise();
 
     const document = new Document({
       filename: originalname,
-      title : documentData.title,
+      title: documentData.title,
       url: Location,
       size: buffer.length,
       user_id: user_id,
-      description : documentData.description,
-      subject : documentData.subject,
-      institute : documentData.institute,
-      key : params.Key,
-      approved : false
+      description: documentData.description,
+      subject: documentData.subject,
+      institute: documentData.institute,
+      key: params.Key,
+      approved: false,
     });
 
     const upload = new Upload({
-      user_id : user_id,
-      document_id : document._id
-    })
+      user_id: user_id,
+      document_id: document._id,
+    });
 
     await document.save();
     await upload.save();

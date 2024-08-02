@@ -7,7 +7,6 @@ export default async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
 
-    
     if (user.email === process.env.ADMIN_EMAIL) {
       next();
     } else {
@@ -16,6 +15,7 @@ export default async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       message: 'Not an admin in catch!!',
     });
