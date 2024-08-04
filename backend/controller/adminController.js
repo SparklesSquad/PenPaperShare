@@ -174,3 +174,63 @@ export const deleteUserController = async (req, res) => {
     res.status(404).json({ message: 'Error while Deleting User', error });
   }
 };
+
+// Analytics
+
+export const getTotalCountsController = async (req, res) => {
+  try {
+    // total users
+    const users = await User.countDocuments();
+    const docs = await Document.countDocuments();
+    const ratings = await Rating.countDocuments();
+    const downloads = await Download.countDocuments();
+    const pending = await Document.countDocuments({ approved: false });
+    res.status(200).json({
+      users,
+      docs,
+      ratings,
+      downloads,
+      pending,
+      message: 'Fetched Successfully',
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: 'Error while fetching documents',
+    });
+  }
+};
+
+export const getTopDownloadedDocumentsController = async (req, res) => {
+  try {
+    const topFiveDocuments = await Download.aggregate([
+      {
+        $group: {
+          _id: '$document_id',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $limit: 5,
+      },
+    ]);
+
+    const ids = topFiveDocuments.map((doc) => {
+      return doc._id;
+    });
+
+    console.log(ids);
+
+    const docs = await Document.find({ _id: { $in: ids } });
+
+    console.log(docs);
+    res.status(200).json({
+      docs,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: 'Error while fetching documents',
+    });
+  }
+};

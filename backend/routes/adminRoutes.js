@@ -8,11 +8,21 @@ import {
   viewDocumentController,
   viewUserController,
   deleteUserController,
+  getTotalCountsController,
+  getTopDownloadedDocumentsController,
 } from '../controller/adminController.js';
 import isLoggedIn from '../middleware/isLoggedIn.js';
 import isAdmin from '../middleware/isAdmin.js';
 
 const router = express.Router();
+
+router.get('/get-total-counts', getTotalCountsController);
+router.get(
+  '/get-top-downloaded-documents',
+  getTopDownloadedDocumentsController
+);
+
+router.get('/get-top-');
 
 router.get(
   '/get-all-documents',
