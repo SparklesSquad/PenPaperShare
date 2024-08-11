@@ -17,12 +17,11 @@ import isAdmin from '../middleware/isAdmin.js';
 const router = express.Router();
 
 router.get('/get-total-counts', getTotalCountsController);
+
 router.get(
   '/get-top-downloaded-documents',
   getTopDownloadedDocumentsController
 );
-
-router.get('/get-top-');
 
 router.get(
   '/get-all-documents',

@@ -9,17 +9,29 @@ import deleteFile from '../utils/delete-file.js';
 export const getAllDocumentsController = async (req, res) => {
   try {
     const documents = await Document.find({ approved: true });
+
+    // If the documents are empty
+    if (documents.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: documents,
+        message: 'No Documents Found !!',
+        count: documents.length,
+      });
+    }
+
     return res.status(200).json({
+      success: true,
       data: documents,
       message: 'Fetched all documents successfully !!',
       count: documents.length,
     });
   } catch (error) {
-    console.log('Error while fetching documents in the server !!');
-    console.log(error);
-    return res
-      .status(500)
-      .send('Error while fetching documents in the server !!');
+    return res.status(500).json({
+      success: false,
+      message: 'Error while fetching documents in the server !!',
+      error,
+    });
   }
 };
 
@@ -27,23 +39,57 @@ export const getAllDocumentsController = async (req, res) => {
 export const viewDocumentController = async (req, res) => {
   try {
     const { document_id } = req.body;
-    const document = await Document.findById(document_id);
-    if (!document) {
-      return res.status(404).json({ message: 'Document not Found' });
+
+    if (!document_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'The Document Id is Invalid',
+      });
     }
-    return res
-      .status(200)
-      .json({ document, message: 'Document fetched Successfully' });
+
+    const document = await Document.findById(document_id);
+
+    if (!document) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Document not Found' });
+    }
+    return res.status(200).json({
+      success: true,
+      data: document,
+      message: 'Document fetched Successfully',
+    });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: 'Error while fetching Document', error });
+    return res.status(500).json({
+      success: false,
+      message: 'Error while fetching Document',
+      error,
+    });
   }
 };
+
+// 200 OK: Successful GET or PUT requests.
+// 201 Created: Successful POST request (resource created).
+// 204 No Content: Successful request with no data to return.
+// 400 Bad Request: Invalid request due to client error.
+// 401 Unauthorized: Authentication failure.
+// 403 Forbidden: Insufficient permissions.
+// 404 Not Found: Resource not found.
+// 409 Conflict: Conflict with current resource state.
+// 500 Internal Server Error: Generic server error.
+// 503 Service Unavailable: Server is down or overloaded.
 
 //To delete the document in entire database
 export const deleteDocumentController = async (req, res) => {
   try {
     const { document_id } = req.body;
+
+    if (!document_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'The Document Id is Invalid',
+      });
+    }
 
     // Deletes the document in MongoDB - Document Schema
     const document = await Document.findByIdAndDelete(document_id);
@@ -58,19 +104,18 @@ export const deleteDocumentController = async (req, res) => {
     await Rating.deleteMany({ document_id: document_id });
 
     // Deletes the document in AWS
-    const awsResponse = await deleteFile(document);
-
-    console.log(awsResponse);
+    await deleteFile(document);
 
     res.status(200).json({
+      success: true,
       message: 'Document Deleted Successfully!!',
     });
   } catch (error) {
-    console.log('Error while deleting document in the server !!');
-    console.log(error);
-    return res
-      .status(500)
-      .send('Error while deleting document in the server !!');
+    return res.status(500).json({
+      success: false,
+      message: 'Error while deleting document in the server !!',
+      error,
+    });
   }
 };
 
@@ -79,15 +124,18 @@ export const pendingApprovalDocumentsController = async (req, res) => {
   try {
     const documents = await Document.find({ approved: false });
     return res.status(200).json({
+      success: true,
       data: documents,
       message: 'Fetched all Pending Approval documents successfully !!',
       count: documents.length,
     });
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .send('Error while fetching Pending Approval documents in the server !!');
+    return res.status(500).json({
+      success: false,
+      message:
+        'Error while fetching Pending Approval documents in the server !!',
+      error,
+    });
   }
 };
 
@@ -96,18 +144,27 @@ export const approveDocumentController = async (req, res) => {
   try {
     const { document_id } = req.body;
 
+    if (!document_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'The Document Id is Invalid',
+      });
+    }
+
     const document = await Document.findByIdAndUpdate(document_id, {
       approved: true,
     });
     return res.status(200).json({
+      success: true,
       data: document,
       message: 'Approved the document successfully !',
     });
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .send('Error while approving the documents in the server !!');
+    return res.status(500).json({
+      success: false,
+      message: 'Error while approving the documents in the server !!',
+      error,
+    });
   }
 };
 
@@ -115,29 +172,55 @@ export const approveDocumentController = async (req, res) => {
 export const getAllUsersController = async (req, res) => {
   try {
     const users = await User.find();
+
+    if (users.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: users,
+        message: 'No users Found !!',
+        count: 0,
+      });
+    }
+
     return res.status(200).json({
+      success: true,
       data: users,
       message: 'Fetched all users successfully !!',
       count: users.length,
     });
   } catch (error) {
-    console.log('Error while fetching users in the server !!');
-    console.log(error);
-    return res.status(500).send('Error while fetching users in the server !!');
+    return res.status(500).json({
+      success: false,
+      message: 'Error while fetching users in the server !!',
+      error,
+    });
   }
 };
 
 export const viewUserController = async (req, res) => {
   try {
     const { user_id } = req.body;
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'The User Id is Invalid',
+      });
+    }
     const user = await User.findById(user_id);
     if (!user) {
-      return res.status(404).json({ message: 'User not Found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not Found' });
     }
-    return res.status(200).json({ user, message: 'User fetched Successfully' });
+    return res.status(200).json({
+      success: true,
+      data: user,
+      message: 'User fetched Successfully',
+    });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: 'Error while fetching User', error });
+    return res
+      .status(500)
+      .json({ success: false, message: 'Error while fetching User', error });
   }
 };
 
@@ -145,14 +228,19 @@ export const deleteUserController = async (req, res) => {
   try {
     const { user_id } = req.body;
 
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'The User Id is Invalid',
+      });
+    }
+
     //To delete all the document tree
     const documents = await Document.find({ user_id: user_id });
 
-    console.log(documents);
+    // For every document, delete the user and all his documents and his whole history
     for (let i = 0; i < documents.length; i++) {
-      //req.body.document_id = documents[i]._id;
       const document_id = documents[i]._id;
-      //await deleteDocumentController(req, res);
       const document = await Document.findByIdAndDelete(document_id);
       await Upload.deleteOne({ document_id: document_id });
       await Download.deleteMany({ document_id: document_id });
@@ -168,35 +256,45 @@ export const deleteUserController = async (req, res) => {
     await Download.deleteMany({ download_user_id: user_id });
     await Rating.deleteMany({ download_user_id: user_id });
 
-    return res.status(200).json({ message: 'User deleted successfully' });
+    return res
+      .status(200)
+      .json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: 'Error while Deleting User', error });
+    return res
+      .status(500)
+      .json({ success: false, message: 'Error while Deleting User', error });
   }
 };
 
 // Analytics
-
+// For Admin Dashboard
 export const getTotalCountsController = async (req, res) => {
   try {
     // total users
-    const users = await User.countDocuments();
-    const docs = await Document.countDocuments();
-    const ratings = await Rating.countDocuments();
-    const downloads = await Download.countDocuments();
-    const pending = await Document.countDocuments({ approved: false });
-    res.status(200).json({
-      users,
-      docs,
-      ratings,
-      downloads,
-      pending,
-      message: 'Fetched Successfully',
+    const usersQuery = User.countDocuments();
+    const docsQuery = Document.countDocuments();
+    const ratingsQuery = Rating.countDocuments();
+    const downloadsQuery = Download.countDocuments();
+    const pendingQuery = Document.countDocuments({ approved: false });
+
+    const [users, docs, ratings, downloads, pending] = await Promise.all([
+      usersQuery,
+      docsQuery,
+      ratingsQuery,
+      downloadsQuery,
+      pendingQuery,
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: [users, docs, ratings, downloads, pending],
+      message: 'All analytics Fetched Successfully',
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
-      message: 'Error while fetching documents',
+      success: false,
+      message: 'Error while fetching the analytics',
+      error,
     });
   }
 };

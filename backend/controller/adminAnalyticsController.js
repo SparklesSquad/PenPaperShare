@@ -1,97 +1,6 @@
 import Upload from '../schemas/upload.js';
 import Download from '../schemas/download.js';
-import Rating from '../schemas/rating.js';
 import User from '../schemas/user.js';
-
-export const getUploadsController = async (req, res) => {
-  try {
-    const { user_id } = req.body;
-
-    const uploads = await Upload.find({ user_id: user_id }).populate(
-      'document_id'
-    );
-
-    return res.status(200).json({
-      data: uploads,
-      count: uploads.length,
-      message: 'Fetched Upload count of the user successfully',
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      data: 0,
-      message: 'Error while fetching upload count of the user',
-    });
-  }
-};
-
-export const getDownloadsController = async (req, res) => {
-  try {
-    const { user_id } = req.body;
-    console.log(user_id);
-    const downloads = await Download.find({
-      download_user_id: user_id,
-    }).populate('document_id');
-
-    return res.status(200).json({
-      data: downloads,
-      count: downloads.length,
-      message: 'Fetched download count of the user successfully',
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      data: 0,
-      message: 'Error while fetching download count of the user',
-    });
-  }
-};
-
-export const getGivenRatingsController = async (req, res) => {
-  try {
-    const { user_id } = req.body;
-
-    const ratings = await Rating.find({ download_user_id: user_id }).populate(
-      'document_id'
-    );
-
-    return res.status(200).json({
-      data: ratings,
-      count: ratings.length,
-      message: 'Fetched review count of the user successfully',
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      data: [],
-      count: 0,
-      message: 'Error while fetching review count of the user',
-    });
-  }
-};
-
-export const getReceivedRatingsController = async (req, res) => {
-  try {
-    const { user_id } = req.body;
-
-    const ratings = await Rating.find({ upload_user_id: user_id }).populate(
-      'document_id'
-    );
-
-    return res.status(200).json({
-      data: ratings,
-      count: ratings.length,
-      message: 'Fetched review count of the user successfully',
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      data: [],
-      count: 0,
-      message: 'Error while fetching review count of the user',
-    });
-  }
-};
 
 export const getTopFiveDownloadedDocuments = async (req, res) => {
   try {
@@ -208,17 +117,15 @@ export const getTopFiveDownloadedDocuments = async (req, res) => {
         topFiveUplodersQuery,
       ]);
 
-    console.log(topFiveDocuments);
-    console.log(topFiveSubjects);
-    console.log(topFiveUploaders);
-
     return res.status(200).json({
+      success: true,
       data: { topFiveDocuments, topFiveSubjects, topFiveUploaders },
       message: 'Successfully fetched top 5 documents',
     });
-  } catch (err) {
-    console.error('Error fetching top downloaded documents:', err);
+  } catch (error) {
     return res.status(500).json({
+      success: false,
+      error,
       message: 'Error while fetching top 5 documents',
     });
   }
@@ -235,7 +142,9 @@ export const getUsersGrowth = async (req, res) => {
       year < 2024 ||
       year > new Date().getFullYear()
     ) {
-      return res.status(400).json({ message: 'Invalid year provided' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid year provided' });
     }
 
     const startDate = new Date(`${year}-01-01T00:00:00Z`);
@@ -267,13 +176,15 @@ export const getUsersGrowth = async (req, res) => {
     }));
 
     return res.status(200).json({
+      success: true,
       data: formattedData,
       message: 'Successfully fetched user growth data for the selected year',
     });
-  } catch (err) {
-    console.error('Error fetching user growth data:', err);
+  } catch (error) {
     return res.status(500).json({
+      success: false,
       message: 'Error while fetching user growth data',
+      error,
     });
   }
 };

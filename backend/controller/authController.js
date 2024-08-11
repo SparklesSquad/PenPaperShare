@@ -101,15 +101,22 @@ const transporter = nodemailer.createTransport({
 export const sendOtpController = async (req, res) => {
   try {
     if (!req.body) {
-      return res.status(400).send('Request body is missing or malformed');
+      return res.status(400).json({
+        success: false,
+        message: 'Request body is missing or malformed',
+      });
     }
     let { email, username } = req.body;
-    username = username || 'User';
-    const exist = await User.findOne({ email });
 
     if (!req.body.email) {
-      return res.status(400).send('Email cannot be empty!');
+      return res.status(400).json({
+        success: false,
+        message: 'Request body is missing or malformed',
+      });
     }
+
+    username = username || 'User';
+    const exist = await User.findOne({ email });
 
     if (exist) {
       return res.status(400).send('User already existed!!');
@@ -129,10 +136,16 @@ export const sendOtpController = async (req, res) => {
       html: emailDescription(otp, username),
     });
 
-    res.status(200).send('OTP sent successfully. Please verify it.');
+    return res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully. Please verify it.',
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Server error while sending OTP');
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while sending OTP',
+      error,
+    });
   }
 };
 
@@ -141,21 +154,34 @@ export const registerController = async (req, res) => {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).send('Email and OTP are required!');
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email and OTP are required!' });
     }
 
     const storedOtp = req.session.otp;
 
     if (!storedOtp || storedOtp.expires < Date.now()) {
-      return res.status(400).send('OTP is invalid or expired.');
+      return res
+        .status(400)
+        .json({ success: false, message: ' OTP is invalid or expired!' });
     }
 
     if (storedOtp.otp !== otp) {
-      return res.status(400).send('Invalid OTP.');
+      return res
+        .status(400)
+        .json({ success: false, message: ' OTP is invalid !!' });
     }
 
     // If OTP is valid, complete user registration
     const { username, password, mobile } = req.body;
+
+    if (!username || !password || mobile) {
+      return res
+        .status(400)
+        .json({ success: false, message: ' All the fields are required' });
+    }
+
     const hash = await bcrypt.hash(password, 10);
 
     const newUser = new User({
@@ -166,11 +192,18 @@ export const registerController = async (req, res) => {
     });
 
     await newUser.save();
+
     req.session.otp = null; // Clear OTP from session
-    res.status(200).send('Registered successfully!');
-  } catch (err) {
-    console.log(err);
-    res.status(500).send('Server Error!');
+
+    res.status(200).json({
+      success: true,
+      message: 'Registered Successfully',
+      data: newUser,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Error while Creating user', error });
   }
 };
 
@@ -178,17 +211,24 @@ export const registerController = async (req, res) => {
 export const loginController = async (req, res) => {
   try {
     if (!req.body) {
-      return res.status(400).send('Request body is missing or malformed');
+      return res.status(400).json({
+        success: false,
+        message: 'Request body is missing or malformed',
+      });
     }
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
 
     if (!req.body.email) {
-      return res.status(400).send('Email cannot be empty!');
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email cannot be empty!' });
     }
+    const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).send("User doesn't exists!");
+      return res
+        .status(404)
+        .json({ success: false, message: "User doesn't exists!" });
     }
 
     //To verify the password
@@ -197,7 +237,6 @@ export const loginController = async (req, res) => {
       let payload = {
         id: user._id,
       };
-      console.log(process.env.JWT_SECRET_CODE);
       //Sents token when user logged in
       jwt.sign(
         payload,
@@ -205,33 +244,56 @@ export const loginController = async (req, res) => {
         { expiresIn: 3600000 },
         (err, token) => {
           if (err) throw err;
-          return res.json({ token, message: 'Logged in Successfully' });
+          return res
+            .status(200)
+            .json({ success: true, token, message: 'Logged in Successfully' });
         }
       );
     } else {
-      return res.status(404).send('Invalid Credentials !!');
+      return res
+        .status(404)
+        .json({ success: false, message: 'Invalid Credentials !!' });
     }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send('Server Error!!');
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: 'Server Error!!', error });
   }
 };
 
 export const forgotPasswordController = async (req, res) => {
   try {
     const { password, user_id } = req.body;
+
+    if (!req.body.password || !req.body.user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password and user id cannot be empty!',
+      });
+    }
+
     const user = await User.findOne({ user_id });
+
     if (!user) {
-      return res.status(404).send('User not found');
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
     }
     // We need to verify the user
     const hash = await bcrypt.hash(password, 10);
 
     user.password = hash;
     await user.save();
-    return res.status(200).send('Password updated successfully');
+    return res
+      .status(200)
+      .json({ success: true, message: 'Password updated successfully' });
   } catch (error) {
-    console.error(error);
-    return res.status(500).send('Server error while updating password');
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Server error while updating password',
+        error,
+      });
   }
 };
