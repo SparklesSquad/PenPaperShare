@@ -17,6 +17,7 @@ const download = mongoose.Schema(
       ref: 'Document',
       required: true,
     },
+    createdAt: { type: Date, default: Date.now, required: true },
   },
   { collection: 'Download' }
 );

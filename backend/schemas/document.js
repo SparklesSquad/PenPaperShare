@@ -18,6 +18,7 @@ const document = mongoose.Schema(
     },
     key: { type: String, required: true },
     approved: { type: Boolean, default: false, required: true },
+    createdAt: { type: Date, default: Date.now, required: true },
   },
   { collection: 'Document' }
 );

@@ -200,37 +200,3 @@ export const getTotalCountsController = async (req, res) => {
     });
   }
 };
-
-export const getTopDownloadedDocumentsController = async (req, res) => {
-  try {
-    const topFiveDocuments = await Download.aggregate([
-      {
-        $group: {
-          _id: '$document_id',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $limit: 5,
-      },
-    ]);
-
-    const ids = topFiveDocuments.map((doc) => {
-      return doc._id;
-    });
-
-    console.log(ids);
-
-    const docs = await Document.find({ _id: { $in: ids } });
-
-    console.log(docs);
-    res.status(200).json({
-      docs,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: 'Error while fetching documents',
-    });
-  }
-};

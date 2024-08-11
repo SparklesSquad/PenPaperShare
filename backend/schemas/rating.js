@@ -18,6 +18,7 @@ const Rating = mongoose.Schema(
       required: true,
     },
     rating: { type: Number, required: true, max: 5 },
+    createdAt: { type: Date, default: Date.now, required: true },
   },
   { collection: 'Rating' }
 );
