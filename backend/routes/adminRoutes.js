@@ -8,51 +8,52 @@ import {
   viewDocumentController,
   viewUserController,
   deleteUserController,
-  getTotalCountsController,
-  getTopDownloadedDocumentsController,
 } from '../controller/adminController.js';
 import isLoggedIn from '../middleware/isLoggedIn.js';
 import isAdmin from '../middleware/isAdmin.js';
 
 const router = express.Router();
 
-router.get('/get-total-counts', getTotalCountsController);
+// localhost/admin/documents
 
+// Gives all the documents
 router.get(
-  '/get-top-downloaded-documents',
-  getTopDownloadedDocumentsController
-);
-
-router.get(
-  '/get-all-documents',
-  isLoggedIn,
-  isAdmin,
+  '/documents',
+  // isLoggedIn, isAdmin,
   getAllDocumentsController
 );
 
-router.get('/view-document', isLoggedIn, isAdmin, viewDocumentController);
+// To view a single document
+router.get('/documents/:id', isLoggedIn, isAdmin, viewDocumentController);
 
-router.delete(
-  '/delete-document',
-  isLoggedIn,
-  isAdmin,
-  deleteDocumentController
-);
+// To delete a single document
+router.delete('/documents/:id', isLoggedIn, isAdmin, deleteDocumentController);
 
+// To get all the pending approval documents
 router.get(
-  '/pending-approval-documents',
+  '/documents?approved=false',
   isLoggedIn,
   isAdmin,
   pendingApprovalDocumentsController
 );
 
-router.put('/approve-document', isLoggedIn, isAdmin, approveDocumentController);
+// To Approve a particular document
+router.put(
+  '/documents/:id/approve',
+  // isLoggedIn,
+  // isAdmin,
+  approveDocumentController
+);
 
-router.get('/get-all-users', isLoggedIn, isAdmin, getAllUsersController);
+// To get all the users
+router.get('/users', isLoggedIn, isAdmin, getAllUsersController);
 
-// TODO: Bit More complex
-router.get('/view-user', isLoggedIn, isAdmin, viewUserController);
+// localhost/user/id
 
-router.delete('/delete-user', isLoggedIn, isAdmin, deleteUserController);
+// TODO: Bit More complex -> Already done, just take care in frontend.
+router.get('/users/:id', isLoggedIn, isAdmin, viewUserController);
+
+// To delete a user
+router.delete('/users/:id', isLoggedIn, isAdmin, deleteUserController);
 
 export default router;

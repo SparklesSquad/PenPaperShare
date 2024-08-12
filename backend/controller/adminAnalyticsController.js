@@ -1,8 +1,9 @@
 import Upload from '../schemas/upload.js';
 import Download from '../schemas/download.js';
 import User from '../schemas/user.js';
+import Rating from '../schemas/rating.js';
 
-export const getTopFiveDownloadedDocuments = async (req, res) => {
+export const getTopFiveDownloadedDocumentsController = async (req, res) => {
   try {
     //To get top 5 documents based on id
     const topFiveDocumentsQuery = Download.aggregate([
@@ -131,7 +132,7 @@ export const getTopFiveDownloadedDocuments = async (req, res) => {
   }
 };
 
-export const getUsersGrowth = async (req, res) => {
+export const getUsersGrowthControlller = async (req, res) => {
   try {
     const { year } = req.query; // Get the year from query parameters
 
@@ -184,6 +185,39 @@ export const getUsersGrowth = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Error while fetching user growth data',
+      error,
+    });
+  }
+};
+
+// Analytics
+// For Admin Dashboard
+export const getTotalCountsController = async (req, res) => {
+  try {
+    // total users
+    const usersQuery = User.countDocuments();
+    const docsQuery = Document.countDocuments();
+    const ratingsQuery = Rating.countDocuments();
+    const downloadsQuery = Download.countDocuments();
+    const pendingQuery = Document.countDocuments({ approved: false });
+
+    const [users, docs, ratings, downloads, pending] = await Promise.all([
+      usersQuery,
+      docsQuery,
+      ratingsQuery,
+      downloadsQuery,
+      pendingQuery,
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: [users, docs, ratings, downloads, pending],
+      message: 'All analytics Fetched Successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error while fetching the analytics',
       error,
     });
   }

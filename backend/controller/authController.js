@@ -4,90 +4,9 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import { emailTemplateOTP } from '../utils/email-template.js';
 
 dotenv.config();
-
-const emailDescription = (otp, username) => `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-         body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f4ef;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
-        .header {
-            background-color: #2e4a62;
-            color: #ffffff;
-            padding: 20px;
-            text-align: center;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
-        .content {
-            padding: 20px;
-            text-align: left;
-        }
-        .footer {
-            background-color: #2e4a62;
-            color: #ffffff;
-            text-align: center;
-            padding: 10px;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
-            font-size: 12px;
-        }
-        .otp {
-            display: block;
-            margin: 20px 0;
-            font-size: 24px;
-            font-weight: bold;
-            color: #2e4a62;
-            text-align: center;
-        }
-        a {
-            color: #2e4a62;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Email Verification</h1>
-        </div>
-        <div class="content">
-            <p>Dear ${username},</p>
-            <p>Thank you for registering with us. To complete your registration, please use the One-Time Password (OTP) below:</p>
-            <span class="otp">${otp}</span>
-            <p>This OTP is valid for the next 10 minutes. Please do not share this OTP with anyone.</p>
-            <p>If you did not request this OTP, please ignore this email or contact our support team leader Mr. Sai.</p>
-            <p>Best regards,</p>
-            <p>PenPaperShare</p>
-        </div>
-        <div class="footer">
-            <p>PenPaperShare | Ganapavaram Colony  | Call Sai : +91 9182462829</p>
-        </div>
-    </div>
-</body>
-</html>
-
-`;
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
@@ -129,11 +48,11 @@ export const sendOtpController = async (req, res) => {
     req.session.otp = { otp, expires: otpExpires };
 
     // Send OTP email
-    await transporter.sendMail({
+    transporter.sendMail({
       from: 'penpapershare@gmail.com',
       to: email,
       subject: 'Your OTP Code',
-      html: emailDescription(otp, username),
+      html: emailTemplateOTP(otp, username),
     });
 
     return res.status(200).json({
@@ -288,12 +207,10 @@ export const forgotPasswordController = async (req, res) => {
       .status(200)
       .json({ success: true, message: 'Password updated successfully' });
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Server error while updating password',
-        error,
-      });
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while updating password',
+      error,
+    });
   }
 };

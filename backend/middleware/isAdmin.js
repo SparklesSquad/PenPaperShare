@@ -10,14 +10,14 @@ export default async (req, res, next) => {
     if (user.email === process.env.ADMIN_EMAIL) {
       next();
     } else {
-      res.status(500).json({
+      return res.status(500).json({
         message: 'Not an admin !!',
       });
     }
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Not an admin in catch!!',
+      error,
     });
   }
 };

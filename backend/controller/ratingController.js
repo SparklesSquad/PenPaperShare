@@ -4,10 +4,11 @@ import User from './../schemas/user.js';
 
 export const documentRatingController = async (req, res) => {
   try {
-    const { document_id, rating } = req.body;
+    const { id } = req.query;
+    const { rating } = req.body;
     const download_user_id = req.user.id;
 
-    if (!rating || !document_id || !download_user_id) {
+    if (!rating || !id || !download_user_id) {
       return res.send(500).json({ success: false, message: 'Missing data' });
     }
 
@@ -26,10 +27,7 @@ export const documentRatingController = async (req, res) => {
     }
 
     const isAlreadyRated = await Rating.find({
-      $and: [
-        { download_user_id: download_user_id },
-        { document_id: document_id },
-      ],
+      $and: [{ download_user_id: download_user_id }, { document_id: id }],
     });
 
     if (isAlreadyRated.length > 0) {
@@ -38,7 +36,7 @@ export const documentRatingController = async (req, res) => {
         .json({ success: false, message: 'Rating already given' });
     }
 
-    const document = await Document.findById(document_id);
+    const document = await Document.findById(id);
 
     if (!document) {
       return res
@@ -48,18 +46,16 @@ export const documentRatingController = async (req, res) => {
     const rateDocument = new Rating({
       upload_user_id: document.user_id,
       download_user_id,
-      document_id,
+      id,
       rating,
     });
 
     await rateDocument.save();
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: 'Rating Updated Successfully',
-        data: document,
-      });
+    return res.status(200).json({
+      success: true,
+      message: 'Rating Updated Successfully',
+      data: document,
+    });
   } catch (error) {
     return res
       .status(500)

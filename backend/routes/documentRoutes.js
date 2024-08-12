@@ -12,9 +12,10 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Use middleware in your route
-// app.post('/upload', upload.single('file'), uploadDocumentController);
 
 const router = express.Router();
+
+router.get('/', getAllDocumentsController);
 
 router.post(
   '/upload-document',
@@ -22,8 +23,8 @@ router.post(
   upload.single('file'),
   uploadDocumentController
 );
-router.get('/get-all-documents', getAllDocumentsController);
-router.get('/download-document', isLoggedIn, downloadDocumentController);
-router.get('/view-document', viewDocumentController);
+
+router.get('/:id/download-document', isLoggedIn, downloadDocumentController);
+router.get('/:id', viewDocumentController);
 
 export default router;

@@ -4,7 +4,7 @@ import {
   getGivenRatingsController,
   getReceivedRatingsController,
   getUploadsController,
-} from '../controller/adminController.js';
+} from '../controller/userAnalyticsController.js';
 import isLoggedIn from '../middleware/isLoggedIn.js';
 
 const router = express.Router();

@@ -87,53 +87,49 @@ export const uploadDocumentController = async (req, res) => {
 //To view or fetch the document
 export const viewDocumentController = async (req, res) => {
   try {
-    const { document_id } = req.body;
+    const { id } = req.query;
 
-    if (!document_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'Document Id cannot be empty',
       });
     }
 
-    const document = await Document.findById(document_id);
+    const document = await Document.findById(id);
 
     if (!document) {
       return res
         .status(404)
         .json({ success: false, message: 'Document not Found' });
     }
-    return res
-      .status(200)
-      .json({
-        success: true,
-        data: document,
-        message: 'Document fetched Successfully',
-      });
+    return res.status(200).json({
+      success: true,
+      data: document,
+      message: 'Document fetched Successfully',
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error while fetching Document',
-        error,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error while fetching Document',
+      error,
+    });
   }
 };
 
 //To doenload the Document
 export const downloadDocumentController = async (req, res) => {
   try {
-    const { document_id } = req.body;
+    const { id } = req.query;
 
-    if (!document_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'Document Id cannot be empty',
       });
     }
 
-    const document = await Document.findById(document_id);
+    const document = await Document.findById(id);
     if (!document) {
       return res
         .status(404)
@@ -146,12 +142,10 @@ export const downloadDocumentController = async (req, res) => {
       .status(200)
       .json({ success: true, message: 'Document downloaded Successfully' });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Error while Downloading Document',
-        error,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Error while Downloading Document',
+      error,
+    });
   }
 };

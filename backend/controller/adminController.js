@@ -4,6 +4,16 @@ import Upload from '../schemas/upload.js';
 import Rating from '../schemas/rating.js';
 import Download from '../schemas/download.js';
 import deleteFile from '../utils/delete-file.js';
+import nodemailer from 'nodemailer';
+import { emailGeneralTemplate } from '../utils/email-template.js';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // You can use other services like SendGrid, Mailgun, etc.
+  auth: {
+    user: 'penpapershare@gmail.com', // Your email
+    pass: 'dolj cinb pgxg ynld', // Your email password
+  },
+});
 
 //To get all the documents
 export const getAllDocumentsController = async (req, res) => {
@@ -38,16 +48,16 @@ export const getAllDocumentsController = async (req, res) => {
 //To view or fetch the document
 export const viewDocumentController = async (req, res) => {
   try {
-    const { document_id } = req.body;
+    const { id } = req.query;
 
-    if (!document_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The Document Id is Invalid',
       });
     }
 
-    const document = await Document.findById(document_id);
+    const document = await Document.findById(id);
 
     if (!document) {
       return res
@@ -68,23 +78,12 @@ export const viewDocumentController = async (req, res) => {
   }
 };
 
-// 200 OK: Successful GET or PUT requests.
-// 201 Created: Successful POST request (resource created).
-// 204 No Content: Successful request with no data to return.
-// 400 Bad Request: Invalid request due to client error.
-// 401 Unauthorized: Authentication failure.
-// 403 Forbidden: Insufficient permissions.
-// 404 Not Found: Resource not found.
-// 409 Conflict: Conflict with current resource state.
-// 500 Internal Server Error: Generic server error.
-// 503 Service Unavailable: Server is down or overloaded.
-
 //To delete the document in entire database
 export const deleteDocumentController = async (req, res) => {
   try {
-    const { document_id } = req.body;
+    const { id } = req.query;
 
-    if (!document_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The Document Id is Invalid',
@@ -92,16 +91,16 @@ export const deleteDocumentController = async (req, res) => {
     }
 
     // Deletes the document in MongoDB - Document Schema
-    const document = await Document.findByIdAndDelete(document_id);
+    const document = await Document.findByIdAndDelete(id);
 
     // Deletes the document in MongoDB - Upload Schema
-    await Upload.deleteOne({ document_id: document_id });
+    await Upload.deleteOne({ document_id: id });
 
     // Deletes the document in MongoDB - Download Schema
-    await Download.deleteMany({ document_id: document_id });
+    await Download.deleteMany({ document_id: id });
 
     // Deletes the document in MongoDB - Rating Schema
-    await Rating.deleteMany({ document_id: document_id });
+    await Rating.deleteMany({ document_id: id });
 
     // Deletes the document in AWS
     await deleteFile(document);
@@ -122,7 +121,13 @@ export const deleteDocumentController = async (req, res) => {
 //To get the documents pending for approval
 export const pendingApprovalDocumentsController = async (req, res) => {
   try {
-    const documents = await Document.find({ approved: false });
+    // Get the 'approved' query parameter from the URL
+    const { approved } = req.query;
+
+    // Convert the 'approved' parameter to a boolean if needed
+    const isApproved = approved === 'true';
+
+    const documents = await Document.find({ approved: isApproved });
     return res.status(200).json({
       success: true,
       data: documents,
@@ -142,24 +147,37 @@ export const pendingApprovalDocumentsController = async (req, res) => {
 //To approve the document
 export const approveDocumentController = async (req, res) => {
   try {
-    const { document_id } = req.body;
+    const { id } = req.params;
 
-    if (!document_id) {
+    console.log(id);
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The Document Id is Invalid',
       });
     }
 
-    const document = await Document.findByIdAndUpdate(document_id, {
+    const document = await Document.findByIdAndUpdate(id, {
       approved: true,
     });
+
+    const user = await User.findById(document.user_id);
+    console.log(user);
+
+    await transporter.sendMail({
+      from: 'penpapershare@gmail.com',
+      to: user.email,
+      subject: 'Document Approved',
+      html: emailGeneralTemplate(user.username),
+    });
+
     return res.status(200).json({
       success: true,
       data: document,
       message: 'Approved the document successfully !',
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Error while approving the documents in the server !!',
@@ -199,14 +217,14 @@ export const getAllUsersController = async (req, res) => {
 
 export const viewUserController = async (req, res) => {
   try {
-    const { user_id } = req.body;
-    if (!user_id) {
+    const { id } = req.query;
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The User Id is Invalid',
       });
     }
-    const user = await User.findById(user_id);
+    const user = await User.findById(id);
     if (!user) {
       return res
         .status(404)
@@ -226,9 +244,9 @@ export const viewUserController = async (req, res) => {
 
 export const deleteUserController = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const { id } = req.query;
 
-    if (!user_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The User Id is Invalid',
@@ -236,7 +254,7 @@ export const deleteUserController = async (req, res) => {
     }
 
     //To delete all the document tree
-    const documents = await Document.find({ user_id: user_id });
+    const documents = await Document.find({ user_id: id });
 
     // For every document, delete the user and all his documents and his whole history
     for (let i = 0; i < documents.length; i++) {
@@ -251,10 +269,10 @@ export const deleteUserController = async (req, res) => {
     }
 
     //To delete all the user download/uploads/ratings
-    await User.findByIdAndDelete(user_id);
-    await Upload.deleteMany({ upload_user_id: user_id });
-    await Download.deleteMany({ download_user_id: user_id });
-    await Rating.deleteMany({ download_user_id: user_id });
+    await User.findByIdAndDelete(id);
+    await Upload.deleteMany({ upload_user_id: id });
+    await Download.deleteMany({ download_user_id: id });
+    await Rating.deleteMany({ download_user_id: id });
 
     return res
       .status(200)
@@ -263,38 +281,5 @@ export const deleteUserController = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: 'Error while Deleting User', error });
-  }
-};
-
-// Analytics
-// For Admin Dashboard
-export const getTotalCountsController = async (req, res) => {
-  try {
-    // total users
-    const usersQuery = User.countDocuments();
-    const docsQuery = Document.countDocuments();
-    const ratingsQuery = Rating.countDocuments();
-    const downloadsQuery = Download.countDocuments();
-    const pendingQuery = Document.countDocuments({ approved: false });
-
-    const [users, docs, ratings, downloads, pending] = await Promise.all([
-      usersQuery,
-      docsQuery,
-      ratingsQuery,
-      downloadsQuery,
-      pendingQuery,
-    ]);
-
-    return res.status(200).json({
-      success: true,
-      data: [users, docs, ratings, downloads, pending],
-      message: 'All analytics Fetched Successfully',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error while fetching the analytics',
-      error,
-    });
   }
 };

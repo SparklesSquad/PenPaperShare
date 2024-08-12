@@ -4,6 +4,6 @@ import isLoggedIn from '../middleware/isLoggedIn.js';
 
 const router = Router();
 
-router.post('/rateDocument', isLoggedIn, documentRatingController);
+router.post('/document/:id', isLoggedIn, documentRatingController);
 
 export default router;

@@ -4,18 +4,16 @@ import Download from '../schemas/download.js';
 
 export const getUploadsController = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const { id } = req.query;
 
-    if (!user_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The User Id is Invalid',
       });
     }
 
-    const uploads = await Upload.find({ user_id: user_id }).populate(
-      'document_id'
-    );
+    const uploads = await Upload.find({ user_id: id }).populate('document_id');
 
     if (uploads.length === 0) {
       return res.status(200).json({
@@ -43,9 +41,9 @@ export const getUploadsController = async (req, res) => {
 
 export const getDownloadsController = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const { id } = req.query;
 
-    if (!user_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The User Id is Invalid',
@@ -53,7 +51,7 @@ export const getDownloadsController = async (req, res) => {
     }
 
     const downloads = await Download.find({
-      download_user_id: user_id,
+      download_user_id: id,
     }).populate('document_id');
 
     if (downloads.length === 0) {
@@ -82,16 +80,16 @@ export const getDownloadsController = async (req, res) => {
 
 export const getGivenRatingsController = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const { id } = req.query;
 
-    if (!user_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The User Id is Invalid',
       });
     }
 
-    const ratings = await Rating.find({ download_user_id: user_id }).populate(
+    const ratings = await Rating.find({ download_user_id: id }).populate(
       'document_id'
     );
 
@@ -121,16 +119,16 @@ export const getGivenRatingsController = async (req, res) => {
 
 export const getReceivedRatingsController = async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const { id } = req.query;
 
-    if (!user_id) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: 'The User Id is Invalid',
       });
     }
 
-    const ratings = await Rating.find({ upload_user_id: user_id }).populate(
+    const ratings = await Rating.find({ upload_user_id: id }).populate(
       'document_id'
     );
 

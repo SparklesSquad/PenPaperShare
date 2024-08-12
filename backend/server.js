@@ -2,7 +2,6 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import session from 'express-session';
-import User from './schemas/user.js';
 import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import ratingRoutes from './routes/ratingRoutes.js';
@@ -14,12 +13,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(express.json());
-// Middleware to parse URL-encoded data
-app.use(express.urlencoded({ extended: true }));
-// app.use();
-// Middleware to parse JSON data
+
+// Middlewares
+app.use(express.json()); // Middleware to parse JSON data
+app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded data
 app.use(cors());
+
+// Session Management
 app.use(
   session({
     secret: 'your-secret-key',
@@ -39,6 +39,7 @@ mongoose
   .then(() => console.log('DB Connected!'))
   .catch((err) => console.log('DB Connection Failed', err));
 
+// Redirection
 app.use('/auth', authRoutes);
 app.use('/document', documentRoutes);
 app.use('/rating', ratingRoutes);
@@ -49,14 +50,15 @@ app.use('/admin/analytics', adminAnalyticsRoutes);
 // API
 app.get('/', async (req, res) => {
   try {
-    const users = await User.find();
-    return res.json({ users });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send('Server Error!!');
+    res.status(500).json({
+      message: 'Welcome to PenPaperShare !! ',
+    });
+  } catch (error) {
+    return res.status(500).json({ error, message: 'Server Error!!' });
   }
 });
 
+// Starting the server
 app.listen(port, () => {
   console.log(`Server is running ${port}`);
 });
