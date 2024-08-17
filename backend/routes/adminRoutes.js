@@ -51,7 +51,8 @@ router.get('/users', isLoggedIn, isAdmin, getAllUsersController);
 // localhost/user/id
 
 // TODO: Bit More complex -> Already done, just take care in frontend.
-router.get('/users/:id', isLoggedIn, isAdmin, viewUserController);
+router.get('/users/:id', //isLoggedIn, isAdmin,
+   viewUserController);
 
 // To delete a user
 router.delete('/users/:id', isLoggedIn, isAdmin, deleteUserController);

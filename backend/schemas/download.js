@@ -6,20 +6,22 @@ const download = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index : true
     },
     download_user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index : true
     },
     document_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Document',
       required: true,
+      index : true
     },
-    createdAt: { type: Date, default: Date.now, required: true },
   },
-  { collection: 'Download' }
+  { collection: 'Download', timestamps : true}
 );
 
 export default mongoose.model('Download', download);

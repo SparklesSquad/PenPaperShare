@@ -14,7 +14,7 @@ const uploadFile = async (documentData, user_id) => {
     return 'File size cannot be greater then 50MB!';
   }
   const params = {
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: process.env.PDF_BUCKET_NAME,
     Key: `uploads/${Date.now()}-${originalname}`,
     Body: buffer,
     ContentType: file.mimetype,
@@ -29,9 +29,12 @@ const uploadFile = async (documentData, user_id) => {
       url: Location,
       size: buffer.length,
       user_id: user_id,
+      country: documentData.country,
       description: documentData.description,
       subject: documentData.subject,
       institute: documentData.institute,
+      major: documentData.country,
+      educationLevel: documentData.educationLevel,
       key: params.Key,
       approved: false,
     });

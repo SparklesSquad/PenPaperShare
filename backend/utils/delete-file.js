@@ -5,7 +5,7 @@ dotenv.config();
 
 const deleteFile = async (document) => {
   const params = {
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: process.env.PDF_BUCKET_NAME,
     Key: document.key,
   };
 

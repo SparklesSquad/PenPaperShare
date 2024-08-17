@@ -4,8 +4,8 @@ const mobileNumberRegex = /^[0-9]{10}$/;
 
 const User = new mongoose.Schema(
   {
-    username: { type: String, required: true },
-    email: { type: String, required: true },
+    username: { type: String, required: true , index : true},
+    email: { type: String, required: true, index : true},
     password: { type: String, required: true },
     mobile: {
       type: String,
@@ -17,8 +17,7 @@ const User = new mongoose.Schema(
         message: (props) => `${props.value} is not a valid mobile number!`,
       },
     },
-    createdAt: { type: Date, default: Date.now, required: true },
-  },
-  { collection: 'User' }
+    },
+  { collection: 'User' , timestamps : true}
 );
 export default mongoose.model('User', User);

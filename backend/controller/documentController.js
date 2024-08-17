@@ -32,7 +32,7 @@ export const getAllDocumentsController = async (req, res) => {
 //To upload the document
 export const uploadDocumentController = async (req, res) => {
   const { file } = req;
-  const { title, description, subject, institute } = req.body;
+  const { title, description, country, educationLevel, major, subject, institute } = req.body;
 
   if (!file) {
     return res.status(400).json({
@@ -41,13 +41,13 @@ export const uploadDocumentController = async (req, res) => {
     });
   }
 
-  if (!title || !description || !subject || !institute) {
+  if (!title || !description || !subject || !institute || !educationLevel || !major || !country) {
     return res.status(400).json({
       success: false,
       message: 'Missing Input !! All fields are required',
     });
   }
-  const documentData = { file, title, description, subject, institute };
+  const documentData = { file, title, description, subject, institute, educationLevel, major, country };
 
   const user_id = req.user.id;
 

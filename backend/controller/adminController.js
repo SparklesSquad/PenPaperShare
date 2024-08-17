@@ -6,6 +6,7 @@ import Download from '../schemas/download.js';
 import deleteFile from '../utils/delete-file.js';
 import nodemailer from 'nodemailer';
 import { emailGeneralTemplate } from '../utils/email-template.js';
+import { processAndUploadFirstPage } from './../utils/page-extractor.js'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail', // You can use other services like SendGrid, Mailgun, etc.
@@ -161,15 +162,30 @@ export const approveDocumentController = async (req, res) => {
       approved: true,
     });
 
-    const user = await User.findById(document.user_id);
-    console.log(user);
+    console.log(document);
 
-    await transporter.sendMail({
-      from: 'penpapershare@gmail.com',
-      to: user.email,
-      subject: 'Document Approved',
-      html: emailGeneralTemplate(user.username),
-    });
+    
+
+    // Extracting and uploading first page of the PDF
+    const pdfKey = document.key;
+    const pdfName = document.filename;
+    console.log(pdfName);
+    await processAndUploadFirstPage(pdfKey, pdfName, id)
+      .then(() => console.log('Operation completed successfully'))
+      .catch(error => console.error('Operation failed:', error));
+
+      console.log(document);
+      console.log(document.user_id);
+      const user = await User.findById(document.user_id);
+      console.log(user);
+  
+      await transporter.sendMail({
+        from: 'penpapershare@gmail.com',
+        to: user.email,
+        subject: 'Document Approved',
+        html: emailGeneralTemplate(user.username),
+      });
+    
 
     return res.status(200).json({
       success: true,

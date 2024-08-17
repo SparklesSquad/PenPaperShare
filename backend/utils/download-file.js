@@ -8,7 +8,7 @@ dotenv.config();
 const downloadFile = async (document, download_user_id, upload_user_id) => {
   
   const params = {
-    Bucket: process.env.BUCKET_NAME,
+    Bucket: process.env.PDF_BUCKET_NAME,
     Key: document.key
   };
 

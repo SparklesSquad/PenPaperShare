@@ -1,6 +1,6 @@
 # PenPaperShare
 
-# How to Instal the Code from Github
+# How to Install the Code from Github
 
 1. Copy the URL from Github.
 2. Create a folder for the project and open the terminal and navigate to the project folder.
@@ -30,3 +30,7 @@ Summary:
 413 Payload Too large
 500 Internal Server Error: Generic server error.
 503 Service Unavailable: Server is down or overloaded.
+
+
+# Getting first page of the PDF
+When admin approves the document, the first page should be extracted not when the file is uploaded
