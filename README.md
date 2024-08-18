@@ -31,6 +31,30 @@ Summary:
 500 Internal Server Error: Generic server error.
 503 Service Unavailable: Server is down or overloaded.
 
-
 # Getting first page of the PDF
+
 When admin approves the document, the first page should be extracted not when the file is uploaded
+
+# Image Extraction -
+
+We need to install ghostscript and graphicsmagick into the system in order to perform this image extraction.
+
+- Extracts the PDF from the s3.
+- Create a new PDF
+- copy the first page into the new pdf.
+- Convert the single page into image and store it in tempimages folder.
+- Read the image and store it in S3.
+- Update the document with the image URL and key and approve the document.
+- Delete the image from the tempimages folder.
+
+# Admin Dashboard
+
+    ## Analytics
+        DONE
+
+    ## Docs
+        - Get all the documents from the server with a single request with status counts.
+        - Handle the filter for status in frontend.
+
+    ## Users
+        - Get all the users and their count.

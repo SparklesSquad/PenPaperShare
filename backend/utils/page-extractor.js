@@ -1,75 +1,79 @@
 import AWS from 'aws-sdk';
-import pdfpoppler from 'pdf-poppler';
-import fs from 'fs';
-import path from 'path';
-import { promisify } from 'util';
+import { PDFDocument } from 'pdf-lib';
+import { fromBuffer } from 'pdf2pic';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import fsPromises from 'fs/promises';
 import Document from './../schemas/document.js';
 
 dotenv.config();
 
 const S3 = new AWS.S3();
-const writeFile = promisify(fs.writeFile);
-const readFile = promisify(fs.readFile);
-const unlink = promisify(fs.unlink);
 
-
-
-export async function processAndUploadFirstPage(pdfKey, pdfName, id) {
-    
-    const pathName = './';
-
-    const tempPdfPath = path.join(pathName, 'temp.pdf');
-    const tempImagePath = path.join(pathName, 'first-page-1.png');
+export async function processAndUploadFirstPage(pdfKey, documentId) {
+  // This is just a temporary fix, to let the finally block access the file path.
+  let tempfilepath = '';
 
   try {
-    // Step 1: Download the PDF from S3
+    // Getting the details of the bucket
     const params = { Bucket: process.env.PDF_BUCKET_NAME, Key: pdfKey };
+
+    // Downloading the pdf from the bucket.
     const { Body: pdfBuffer } = await S3.getObject(params).promise();
-    
-    // Save the PDF buffer to a temporary file
-    await writeFile(tempPdfPath, pdfBuffer);
 
-    // Step 2: Convert the first page of the PDF to an image
-    const options = {
-      format: 'png',
-      out_dir: pathName,
-      out_prefix: 'first-page',
-      page: 1 // Convert only the first page
-    };
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
 
-    //Adds -1 to the filename by deafult
-    await pdfpoppler.convert(tempPdfPath, options);
+    // Creating a new empty pdf document
+    const newPdfDoc = await PDFDocument.create();
 
-    // Step 3: Upload the image to S3
-    const imageBytes = await readFile(tempImagePath);
+    // we are just copying the reference of the pages into the new document.
+    const [pages1] = await newPdfDoc.copyPages(pdfDoc, [0]);
 
-    const uploadParams = {
+    // Copying the pages into the new document
+    newPdfDoc.addPage(pages1);
+
+    // Serialize the new PDF document to a buffer
+    const newPdfBytes = await newPdfDoc.save();
+
+    // Convert the first page of the PDF to an image using pdf2pic
+    const converter = fromBuffer(newPdfBytes, {
+      density: 300, // Resolution (DPI)
+      format: 'png', // Image format (jpeg, png, etc.)
+      saveFilename: Date.now() + '-image',
+      savePath: './tempimages/',
+      width: 1024, // Width of the output image
+      height: 1024, // Height of the output image
+    });
+
+    // Convert the first page and save it to a specific path
+    const image = await converter(1);
+
+    // Temp fix
+    tempfilepath = image.path;
+
+    // Reading the image inorder to store it to s3
+    const realImage = fs.readFileSync(image.path);
+
+    // Declaring the AWS Parameters
+    const awsParams = {
       Bucket: process.env.IMAGE_BUCKET_NAME,
-      Key: `images/${Date.now()}-${pdfName}`,
-      Body: imageBytes,
-      ContentType: 'image/png'
+      Key: `images/${Date.now()}-image`,
+      Body: realImage,
+      ContentType: 'image/png',
     };
-    await S3.upload(uploadParams).promise();
 
-    //To update imageKey in the database
-    const document = await Document.findByIdAndUpdate(id, {
-        imageKey : uploadParams.Key,
-      });
+    // Getting the S3 URL of the image
+    const { Location } = await S3.upload(awsParams).promise();
 
-    return document;
-  } catch (error) {
-    console.error('Error processing PDF and uploading image:', error);
-    throw error;
+    // Updating the document with the image key and URL
+    await Document.findByIdAndUpdate(documentId, {
+      imageURL: Location,
+      imageKey: awsParams.Key,
+      approved: 'APPROVED',
+    });
   } finally {
     // Step 4: Clean up temporary files
-    try {
-      await unlink(tempPdfPath);
-      await unlink(tempImagePath);
-    } catch (cleanupError) {
-      console.error('Error cleaning up temporary files:', cleanupError);
-    }
+    await fsPromises.unlink(tempfilepath);
   }
 }
-
-

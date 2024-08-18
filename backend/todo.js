@@ -15,6 +15,7 @@
 // DONE: When admin approves a document, the user should receive a email regarding this.
 // DONE: Take the HTML code out
 // DONE: Update database by adding indexes
+// DONE: Implemented the extraction of image from pdf functionality.
 
 // Frontend
 // TODO: Register/Login with google

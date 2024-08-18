@@ -6,7 +6,7 @@ import Download from '../schemas/download.js';
 import deleteFile from '../utils/delete-file.js';
 import nodemailer from 'nodemailer';
 import { emailGeneralTemplate } from '../utils/email-template.js';
-import { processAndUploadFirstPage } from './../utils/page-extractor.js'
+import { processAndUploadFirstPage } from './../utils/page-extractor.js';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail', // You can use other services like SendGrid, Mailgun, etc.
@@ -19,7 +19,27 @@ const transporter = nodemailer.createTransport({
 //To get all the documents
 export const getAllDocumentsController = async (req, res) => {
   try {
-    const documents = await Document.find({ approved: true });
+    const { approved } = req.query;
+
+    // Getting the status counts such as Approved : 1, Rejected : 2
+    const statusCounts = await Document.aggregate([
+      {
+        $group: {
+          _id: '$approved',
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+
+    let filter = {};
+
+    if (approved) {
+      filter = { approved };
+    }
+    // Getting all the documents
+    const documents = await Document.find(filter);
 
     // If the documents are empty
     if (documents.length === 0) {
@@ -33,7 +53,10 @@ export const getAllDocumentsController = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: documents,
+      data: {
+        statusCounts,
+        documents,
+      },
       message: 'Fetched all documents successfully !!',
       count: documents.length,
     });
@@ -122,13 +145,7 @@ export const deleteDocumentController = async (req, res) => {
 //To get the documents pending for approval
 export const pendingApprovalDocumentsController = async (req, res) => {
   try {
-    // Get the 'approved' query parameter from the URL
-    const { approved } = req.query;
-
-    // Convert the 'approved' parameter to a boolean if needed
-    const isApproved = approved === 'true';
-
-    const documents = await Document.find({ approved: isApproved });
+    const documents = await Document.find({ approved: 'PENDING' });
     return res.status(200).json({
       success: true,
       data: documents,
@@ -150,7 +167,6 @@ export const approveDocumentController = async (req, res) => {
   try {
     const { id } = req.params;
 
-    console.log(id);
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -158,34 +174,22 @@ export const approveDocumentController = async (req, res) => {
       });
     }
 
-    const document = await Document.findByIdAndUpdate(id, {
-      approved: true,
-    });
+    // Get the document to get the URL of the pdf
+    const document = await Document.findById(id);
 
-    console.log(document);
-
-    
-
-    // Extracting and uploading first page of the PDF
-    const pdfKey = document.key;
-    const pdfName = document.filename;
-    console.log(pdfName);
-    await processAndUploadFirstPage(pdfKey, pdfName, id)
+    //
+    await processAndUploadFirstPage(document.key, id)
       .then(() => console.log('Operation completed successfully'))
-      .catch(error => console.error('Operation failed:', error));
+      .catch((error) => console.error('Operation failed:', error));
 
-      console.log(document);
-      console.log(document.user_id);
-      const user = await User.findById(document.user_id);
-      console.log(user);
-  
-      await transporter.sendMail({
-        from: 'penpapershare@gmail.com',
-        to: user.email,
-        subject: 'Document Approved',
-        html: emailGeneralTemplate(user.username),
-      });
-    
+    const user = await User.findById(document.user_id);
+
+    await transporter.sendMail({
+      from: 'penpapershare@gmail.com',
+      to: user.email,
+      subject: 'Document Approved',
+      html: emailGeneralTemplate(user.username),
+    });
 
     return res.status(200).json({
       success: true,
@@ -193,10 +197,37 @@ export const approveDocumentController = async (req, res) => {
       message: 'Approved the document successfully !',
     });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Error while approving the documents in the server !!',
+      error,
+    });
+  }
+};
+
+export const rejectDocumentController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'The Document Id is Invalid',
+      });
+    }
+
+    await Document.findByIdAndUpdate(id, {
+      approved: 'REJECTED',
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Document has been rejected !',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error while rejecting the documents in the server !!',
       error,
     });
   }

@@ -1,5 +1,5 @@
-export const emailTemplateOTP = (username, otp) => {
-  `<!DOCTYPE html>
+export const emailTemplateOTP = (otp, username) => {
+  return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />

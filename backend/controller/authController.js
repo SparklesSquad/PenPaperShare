@@ -95,7 +95,7 @@ export const registerController = async (req, res) => {
     // If OTP is valid, complete user registration
     const { username, password, mobile } = req.body;
 
-    if (!username || !password || mobile) {
+    if (!username || !password || !mobile) {
       return res
         .status(400)
         .json({ success: false, message: ' All the fields are required' });

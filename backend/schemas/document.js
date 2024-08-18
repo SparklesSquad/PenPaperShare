@@ -21,9 +21,14 @@ const document = mongoose.Schema(
     },
     key: { type: String, required: true },
     imageKey: { type: String },
-    approved: { type: Boolean, default: false, required: true },
+    approved: {
+      type: String,
+      enum: ['APPROVED', 'REJECTED', 'PENDING'],
+      default: 'PENDING',
+      required: true,
+    },
   },
-  { collection: 'Document' , timestamps : true}
+  { collection: 'Document', timestamps: true }
 );
 
 document.index({ title: 'text', subject: 'text', institute: 'text' });

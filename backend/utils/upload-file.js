@@ -36,7 +36,6 @@ const uploadFile = async (documentData, user_id) => {
       major: documentData.country,
       educationLevel: documentData.educationLevel,
       key: params.Key,
-      approved: false,
     });
 
     const upload = new Upload({

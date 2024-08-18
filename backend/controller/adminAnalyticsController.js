@@ -199,7 +199,7 @@ export const getTotalCountsController = async (req, res) => {
     const docsQuery = Document.countDocuments();
     const ratingsQuery = Rating.countDocuments();
     const downloadsQuery = Download.countDocuments();
-    const pendingQuery = Document.countDocuments({ approved: false });
+    const pendingQuery = Document.countDocuments({ approved: 'APPROVED' });
 
     const [users, docs, ratings, downloads, pending] = await Promise.all([
       usersQuery,

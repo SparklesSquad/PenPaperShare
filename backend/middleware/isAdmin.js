@@ -6,7 +6,6 @@ dotenv.config();
 export default async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
-
     if (user.email === process.env.ADMIN_EMAIL) {
       next();
     } else {

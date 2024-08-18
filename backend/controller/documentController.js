@@ -5,7 +5,7 @@ import downloadFile from '../utils/download-file.js';
 
 export const getAllDocumentsController = async (req, res) => {
   try {
-    const documents = await Document.find({ approved: true });
+    const documents = await Document.find({ approved: 'APPROVED' });
 
     if (documents.length === 0) {
       return res.status(200).json({
@@ -32,7 +32,15 @@ export const getAllDocumentsController = async (req, res) => {
 //To upload the document
 export const uploadDocumentController = async (req, res) => {
   const { file } = req;
-  const { title, description, country, educationLevel, major, subject, institute } = req.body;
+  const {
+    title,
+    description,
+    country,
+    educationLevel,
+    major,
+    subject,
+    institute,
+  } = req.body;
 
   if (!file) {
     return res.status(400).json({
@@ -41,13 +49,30 @@ export const uploadDocumentController = async (req, res) => {
     });
   }
 
-  if (!title || !description || !subject || !institute || !educationLevel || !major || !country) {
+  if (
+    !title ||
+    !description ||
+    !subject ||
+    !institute ||
+    !educationLevel ||
+    !major ||
+    !country
+  ) {
     return res.status(400).json({
       success: false,
       message: 'Missing Input !! All fields are required',
     });
   }
-  const documentData = { file, title, description, subject, institute, educationLevel, major, country };
+  const documentData = {
+    file,
+    title,
+    description,
+    subject,
+    institute,
+    educationLevel,
+    major,
+    country,
+  };
 
   const user_id = req.user.id;
 
