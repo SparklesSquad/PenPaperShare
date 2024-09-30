@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { emailTemplateOTP } from '../utils/email-template.js';
 
+let otpStore = {};
+
 dotenv.config();
 
 // Configure nodemailer
@@ -38,14 +40,17 @@ export const sendOtpController = async (req, res) => {
     const exist = await User.findOne({ email });
 
     if (exist) {
-      return res.status(400).send('User already existed!!');
+      return res
+        .status(400)
+        .json({ sucess: false, message: 'User already existed!!' });
     }
 
     const otp = crypto.randomInt(100000, 999999).toString(); // Generates a 6-digit OTP
 
     // Store OTP temporarily for the session
     const otpExpires = Date.now() + 5 * 60 * 1000; // OTP expires in 15 minutes
-    req.session.otp = { otp, expires: otpExpires };
+
+    otpStore[email] = { otp, otpExpires };
 
     // Send OTP email
     transporter.sendMail({
@@ -60,6 +65,7 @@ export const sendOtpController = async (req, res) => {
       message: 'OTP sent successfully. Please verify it.',
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Server error while sending OTP',
@@ -78,15 +84,19 @@ export const registerController = async (req, res) => {
         .json({ success: false, message: 'Email and OTP are required!' });
     }
 
-    const storedOtp = req.session.otp;
+    // const storedOtp = req.session.otp;
+    // const storedOtp = await redisClient.get(`otp:${email}`);
+    const { otp: storedOtp, otpExpires } = otpStore[email];
 
-    if (!storedOtp || storedOtp.expires < Date.now()) {
+    console.log(storedOtp, otp);
+
+    if (!storedOtp || otpExpires < Date.now()) {
       return res
         .status(400)
         .json({ success: false, message: ' OTP is invalid or expired!' });
     }
 
-    if (storedOtp.otp !== otp) {
+    if (storedOtp !== otp) {
       return res
         .status(400)
         .json({ success: false, message: ' OTP is invalid !!' });

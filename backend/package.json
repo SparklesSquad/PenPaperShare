@@ -27,7 +27,8 @@
     "nodemon": "^3.1.4",
     "pdf-lib": "^1.17.1",
     "pdf-poppler": "^0.2.1",
-    "pdf2pic": "^3.1.1"
+    "pdf2pic": "^3.1.1",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

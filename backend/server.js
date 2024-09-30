@@ -29,7 +29,7 @@ app.use(
   })
 );
 
-const port = 5001;
+const port = 5500;
 
 //database connection
 mongoose
